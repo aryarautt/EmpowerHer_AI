@@ -1,0 +1,10 @@
+tensorflow
+librosa
+numpy
+scikit-learn
+pandas
+soundfile
+tqdm
+flask
+twilio
+gunicorn
