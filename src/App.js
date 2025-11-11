@@ -207,7 +207,7 @@ const handleSendAlert = async () => {
 
       <footer className="footer">
         <p>
-          Developed by Team RakshaAI — Srushti Aravandekar | Arya Raut | Shravani Khurpe | Sara Kolas
+          Developed by Team EmpowerHer — Srushti Aravandekar | Arya Raut | Shravani Khurpe | Sara Kolas
         </p>
       </footer>
     </div>
