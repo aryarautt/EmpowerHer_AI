@@ -1,0 +1,106 @@
+.landing {
+  position: relative;
+  height: 100vh;
+  background: linear-gradient(120deg, #ffdde1, #ee9ca7);
+  background-size: 400% 400%;
+  animation: gradientShift 10s ease infinite, fadeIn 1.2s ease forwards;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+
+/* Smooth fade-out animation */
+.landing.fade-out {
+  opacity: 0;
+}
+
+/* Moving gradient background */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Soft fade-in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Overlay for soft white layer */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Centered content animation */
+.landing-content {
+  text-align: center;
+  z-index: 1;
+  max-width: 600px;
+  padding: 20px;
+  opacity: 0;
+  transform: translateY(40px);
+  animation: fadeSlideUp 1.5s ease forwards;
+}
+
+/* Slide-up text animation */
+@keyframes fadeSlideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Logo fade-in */
+.landing-logo {
+  width: 150px;
+  margin-bottom: 20px;
+  animation: logoFade 1.5s ease forwards;
+}
+
+@keyframes logoFade {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Headings and text */
+.landing-content h1 {
+  font-size: 2.5em;
+  color: #b71c1c;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.landing-content p {
+  font-size: 1.1em;
+  color: #333;
+  margin-bottom: 30px;
+  animation: fadeSlideUp 2s ease forwards;
+}
+
+/* Button styling */
+.start-btn {
+  padding: 14px 40px;
+  background-color: #b71c1c;
+  border: none;
+  border-radius: 50px;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: 0.3s ease;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.start-btn:hover {
+  background-color: #d32f2f;
+  transform: scale(1.05);
+}
