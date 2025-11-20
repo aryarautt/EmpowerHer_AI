@@ -9,11 +9,17 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
-# -------------------------
-# ENABLE CORS FOR FRONTEND
-# -------------------------
-# Allow ALL origins for testing and Netlify/frontend
-CORS(app, resources={r"/*": {"origins": "*"}})
+# ------------------------------------
+# FINAL CORS CONFIG (As Kolas required)
+# ------------------------------------
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    return response
 
 # -------------------------
 # LOGGING SETUP
@@ -24,75 +30,71 @@ if not os.path.exists("logs"):
 logging.basicConfig(
     filename="logs/backend.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
+    format="%(asctime)s - %(levelname)": "%(message)s"
 )
 
 # -------------------------
 # LOAD MODEL
 # -------------------------
-MODEL_PATH = 'distress_model.h5'
+MODEL_PATH = "distress_model.h5"
 
 model = None
 if os.path.exists(MODEL_PATH):
     model = tf.keras.models.load_model(MODEL_PATH)
-    logging.info("✅ Model loaded successfully.")
+    logging.info("Model loaded successfully.")
 else:
-    logging.warning("⚠️ Model file not found! Put distress_model.h5 in the backend folder.")
+    logging.warning("Model file not found! Please upload distress_model.h5.")
 
 # -------------------------
 # ROUTES
 # -------------------------
-@app.route('/')
+@app.route("/")
 def home():
-    return jsonify({'message': 'EmpowerHer Flask API is running!'})
+    return jsonify({"status": "EmpowerHer Flask API is running!"})
 
-@app.route('/predict', methods=['POST'])
+@app.route("/predict", methods=["POST"])
 def predict():
     try:
         if model is None:
-            return jsonify({'error': 'Model not loaded'}), 500
+            return jsonify({"error": "Model not loaded"}), 500
 
-        # Correct field name expected from frontend
-        if 'file' not in request.files:
-            return jsonify({'error': 'No audio file uploaded. Expected field name: file'}), 400
+        if "file" not in request.files:
+            return jsonify({"error": "No file uploaded. Expected field name: file"}), 400
 
-        file = request.files['file']
-        file.save('temp.wav')
+        audio_file = request.files["file"]
+        audio_file.save("temp.wav")
 
-        # Extract MFCC
-        y, sr = librosa.load('temp.wav', duration=3, offset=0.5)
-        mfccs = np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40).T, axis=0)
+        # Load audio and extract MFCC
+        y, sr = librosa.load("temp.wav", duration=3, offset=0.5)
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40)
+        mfcc_mean = np.mean(mfcc.T, axis=0)
 
-        x = np.expand_dims(mfccs, axis=0)
+        x = np.expand_dims(mfcc_mean, axis=0)
+
+        # Sigmoid output handling (Arya's model)
         pred = model.predict(x)
-
-        # Arya said: sigmoid output → distress if > 0.5
         confidence = float(pred[0][0])
-        prediction = 'distress' if confidence > 0.5 else 'normal'
+        prediction = "distress" if confidence > 0.5 else "normal"
 
-        logging.info(f"Prediction: {prediction} | Confidence: {confidence}")
+        logging.info(f"Prediction: {prediction}, Confidence: {confidence}")
 
         return jsonify({
-            'prediction': prediction,
-            'confidence': confidence
+            "prediction": prediction,
+            "confidence": confidence
         })
 
     except Exception as e:
         logging.error(f"Prediction failed: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
-@app.route('/alert', methods=['POST'])
+@app.route("/alert", methods=["POST"])
 def alert():
     """
-    This endpoint will send SNS alert (once Srushti sets AWS credentials / role).
+    SNS / SMS alert will be handled once Srushti configures credentials or an instance role.
     """
-    try:
-        return jsonify({'error': 'SNS credentials not configured'}), 500
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return jsonify({"error": "SNS not configured yet"}), 500
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
