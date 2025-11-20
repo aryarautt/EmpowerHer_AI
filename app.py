@@ -1,31 +1,54 @@
 from flask import Flask, request, jsonify
-import librosa
-import numpy as np
 import tensorflow as tf
+import numpy as np
+import librosa
+import os
+import logging
+import requests
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)   # Allow frontend to call backend
 
-# Load your trained model
-model = tf.keras.models.load_model('../distress_model.h5')
+# -------------------------
+# LOGGING SETUP
+# -------------------------
+if not os.path.exists("logs"):
+    os.makedirs("logs")
 
+logging.basicConfig(
+    filename="logs/backend.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+
+# -------------------------
+# LOAD MODEL
+# -------------------------
+MODEL_PATH = 'distress_model.h5'
+
+if os.path.exists(MODEL_PATH):
+    model = tf.keras.models.load_model(MODEL_PATH)
+    logging.info("✅ Model loaded successfully.")
+else:
+    model = None
+    logging.warning("⚠️ Model file not found! Please add 'distress_model.h5' to the project folder.")
+
+# -------------------------
+# ROUTES
+# -------------------------
 @app.route('/')
 def home():
-    return "EmpowerHer AI backend is running!"
+    return jsonify({'message': 'EmpowerHer Flask API is running!'})
 
+# -------------------------
+# PREDICT ENDPOINT
+# -------------------------
 @app.route('/predict', methods=['POST'])
 def predict():
-    if 'audio' not in request.files:
-        return jsonify({'error': 'No audio file provided'}), 400
+    try:
+        if model is None:
+            return jsonify({'error': 'Model not loaded'}), 500
 
-    audio_file = request.files['audio']
-    y, sr = librosa.load(audio_file, sr=None)
-    mfcc = np.mean(librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40).T, axis=0)
-    mfcc = np.expand_dims(mfcc, axis=0)
-
-    prediction = model.predict(mfcc)
-    label = 'distress' if prediction[0][0] > 0.5 else 'normal'
-
-    return jsonify({'alert': label})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+        if 'file' not in request.files:
+            return jsonify({'error': 'No
